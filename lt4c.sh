@@ -2,7 +2,7 @@
 set -e
 
 # --------------------------------------------
-# Cloud GPU T4 Setup Script (Final Clean Build)
+# Cloud GPU T4 Setup Script (Final + Audio Fix)
 # --------------------------------------------
 
 echo "[*] Updating system..."
@@ -17,6 +17,15 @@ sudo apt-get install -y xfce4 xfce4-goodies xrdp
 
 echo "[*] Installing TigerVNC..."
 sudo apt-get install -y tigervnc-standalone-server tigervnc-common
+
+echo "[*] Enabling XRDP audio (PulseAudio modules)..."
+sudo apt-get install -y pulseaudio pulseaudio-utils pulseaudio-module-xrdp
+# Copy PulseAudio modules if needed
+PULSE_DIR="/usr/lib/pulse-$(pulseaudio --version | awk '{print $2}')/modules"
+if [ -d "$PULSE_DIR" ]; then
+  sudo cp "$PULSE_DIR"/module-xrdp*.so /usr/lib/xrdp/
+fi
+sudo systemctl restart xrdp
 
 echo "[*] Installing Sunshine..."
 SUNSHINE_VER=0.24.0
@@ -86,6 +95,7 @@ chmod +x "$DESKTOP_DIR/GPU_Test.desktop"
 # --------------------------------
 echo "--------------------------------"
 echo "Setup hoàn tất!"
-echo "- Kiểm tra GPU: nvidia-smi"
-echo "- Kiểm tra CUDA trong PyTorch: python3 -c \"import torch; print(torch.cuda.is_available())\""
-echo "- Ngoài Desktop đã có shortcut: Sunshine, Chromium, GPU Test"
+echo "- GPU: chạy nvidia-smi"
+echo "- PyTorch CUDA: python3 -c \"import torch; print(torch.cuda.is_available())\""
+echo "- Remote desktop qua RDP: đã có âm thanh"
+echo "- Ngoài Desktop có shortcut: Sunshine, Chromium, GPU Test"
