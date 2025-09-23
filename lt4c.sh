@@ -19,13 +19,21 @@ apt-get install -y xrdp xorgxrdp tigervnc-standalone-server tigervnc-common
 apt-get install -y pulseaudio pulseaudio-utils pulseaudio-module-xrdp ssl-cert libfuse2
 echo "startxfce4" > ~/.xsession
 
-# ----- NVIDIA driver (ổn định) -----
+# ----- NVIDIA driver 535 (only) -----
+# Remove all existing NVIDIA drivers and dependencies first
 apt-get remove --purge -y 'nvidia-*' 'libnvidia-*' || true
 apt-get autoremove -y
 apt-get clean
+
+# Add NVIDIA PPA to ensure we can get the correct version
+add-apt-repository ppa:graphics-drivers/ppa -y
 apt-get update
+
+# Install only the NVIDIA driver 535
 apt-get install -y nvidia-driver-535
-apt-mark hold nvidia-driver-580 || true
+
+# Hold NVIDIA driver version to prevent upgrading to 580 or later
+apt-mark hold nvidia-driver-535 || true
 
 # ----- Sunshine -----
 SUNSHINE_VER=0.24.0
@@ -96,6 +104,10 @@ chmod +x "$DESKTOP_DIR/"*.desktop
 # ----- Start XRDP -----
 systemctl enable xrdp || true
 systemctl restart xrdp || true
+
+# Restart and reload the xrdp service for the configuration to take effect
+systemctl restart xrdp
+systemctl restart xorgxrdp
 
 echo "--------------------------------"
 echo "Setup complete!"
