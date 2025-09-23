@@ -2,11 +2,13 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
-# ----- Fix repo & apt -----
+# ----- Fix apt -----
 dpkg --configure -a || true
 apt-get -y --fix-broken install || true
+apt-get clean
 apt-get update -o Acquire::Retries=3 --fix-missing
 
+# ----- Base packages -----
 apt-get install -y apt-transport-https ca-certificates curl wget git htop unzip \
                    python3 python3-pip lsb-release gnupg libglib2.0-bin dbus-x11 \
                    software-properties-common
@@ -15,12 +17,13 @@ apt-get install -y apt-transport-https ca-certificates curl wget git htop unzip 
 apt-get install -y xfce4 xfce4-terminal xfce4-goodies
 apt-get install -y xrdp xorgxrdp tigervnc-standalone-server tigervnc-common
 apt-get install -y pulseaudio pulseaudio-utils pulseaudio-module-xrdp ssl-cert libfuse2
-
-# Set default session
 echo "startxfce4" > ~/.xsession
 
-# ----- NVIDIA driver (fix bản 535, tránh 580) -----
-apt-get remove -y nvidia-driver-* || true
+# ----- NVIDIA driver (ổn định) -----
+apt-get remove --purge -y 'nvidia-*' 'libnvidia-*' || true
+apt-get autoremove -y
+apt-get clean
+apt-get update
 apt-get install -y nvidia-driver-535
 apt-mark hold nvidia-driver-580 || true
 
@@ -32,8 +35,8 @@ apt-get install -y "./${DEB_FILE}"
 rm -f "${DEB_FILE}"
 
 # ----- Chromium -----
-apt-get install -y chromium-browser || apt-get install -y chromium || true
-CHROMIUM_BIN=$(command -v chromium-browser || command -v chromium || echo chromium)
+apt-get install -y chromium-browser || apt-get install -y chromium
+CHROMIUM_BIN=$(command -v chromium-browser || command -v chromium)
 
 # ----- PyTorch CUDA -----
 pip3 install --upgrade pip
