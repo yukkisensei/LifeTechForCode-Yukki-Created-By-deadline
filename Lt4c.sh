@@ -20,19 +20,19 @@ apt-get install -y pulseaudio pulseaudio-utils pulseaudio-module-xrdp ssl-cert l
 echo "startxfce4" > ~/.xsession
 
 # ----- NVIDIA driver 535 (only) -----
-# Remove all existing NVIDIA drivers and dependencies first
+# Xóa tất cả driver NVIDIA cũ
 apt-get remove --purge -y 'nvidia-*' 'libnvidia-*' || true
 apt-get autoremove -y
 apt-get clean
 
-# Add NVIDIA PPA to ensure we can get the correct version
+# Thêm PPA NVIDIA để lấy đúng driver 535
 add-apt-repository ppa:graphics-drivers/ppa -y
 apt-get update
 
-# Install only the NVIDIA driver 535
+# Cài đặt driver NVIDIA 535
 apt-get install -y nvidia-driver-535
 
-# Hold NVIDIA driver version to prevent upgrading to 580 or later
+# Giữ driver NVIDIA 535, không tự động nâng cấp lên 580
 apt-mark hold nvidia-driver-535 || true
 
 # ----- Sunshine -----
@@ -102,12 +102,26 @@ EOF
 chmod +x "$DESKTOP_DIR/"*.desktop
 
 # ----- Start XRDP -----
+# Giải quyết vấn đề với invoke-rc.d không cho phép khởi động dịch vụ
+echo 'Dpkg::Options { "--force-confdef"; "--force-confold"; }' | sudo tee /etc/apt/apt.conf.d/99fixbadpolicy
+
+# Cài đặt lại và khởi động lại XRDP
 systemctl enable xrdp || true
 systemctl restart xrdp || true
 
-# Restart and reload the xrdp service for the configuration to take effect
+# Kiểm tra và khởi động lại xrdp và xorgxrdp
 systemctl restart xrdp
 systemctl restart xorgxrdp
+
+# ----- Kiểm tra audio -----
+# Đảm bảo PulseAudio chạy và cài đặt đúng cách
+sudo systemctl enable pulseaudio
+sudo systemctl start pulseaudio
+
+# ----- Kiểm tra và khởi động lại dịch vụ Sunshine -----
+# Đảm bảo Sunshine chạy với quyền cao nhất
+sudo systemctl enable sunshine || true
+sudo systemctl start sunshine || true
 
 echo "--------------------------------"
 echo "Setup complete!"
